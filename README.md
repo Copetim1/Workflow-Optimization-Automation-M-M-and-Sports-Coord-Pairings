@@ -37,7 +37,7 @@ Professional matching emphasizes academic and career alignment.
 
 | Color       | Contribution |
 | ----------- | ------------ |
-| Red         | 10%          |
+| Red         | 0%          |
 | Yellow      | 25%          |
 | Light Green | 50%          |
 | Green       | 75%          |
@@ -66,7 +66,7 @@ Casual matching focuses more on personality and general fit, with reduced emphas
 
 | Color       | Contribution |
 | ----------- | ------------ |
-| Red         | 10%          |
+| Red         | 0%          |
 | Yellow      | 25%          |
 | Light Green | 50%          |
 | Green       | 75%          |
