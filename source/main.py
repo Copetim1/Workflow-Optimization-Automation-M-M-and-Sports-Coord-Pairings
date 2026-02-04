@@ -4,9 +4,7 @@ import os
 
 from collections import defaultdict
 from typing import DefaultDict
-
-
-
+ 
 #Get the directory containing this script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -16,13 +14,8 @@ file_path = os.path.join(script_dir, 'files', 'Spring_2026_M&M_Responses.xlsx')
 print(f"Looking for file at: {file_path}")
 
 df = pd.read_excel(file_path)
-print(df.head())
-
-# df = pd.read_excel('source/files/Spring_2026_M&M_Responses.xlsx')
-# df.head()
-# print(df)
-# print(df.head())
-
+print(df)
+  
 '''
 Create two hashmap of hashmaps.
 
