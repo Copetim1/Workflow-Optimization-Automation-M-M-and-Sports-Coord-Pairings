@@ -1,7 +1,9 @@
 
 import pandas as pd
 import os
-
+from user import User
+from mentor import Mentor
+from mentee import Mentee
 from collections import defaultdict
 from typing import DefaultDict
  
@@ -14,8 +16,22 @@ file_path = os.path.join(script_dir, 'files', 'Spring_2026_M&M_Responses.xlsx')
 print(f"Looking for file at: {file_path}")
 
 df = pd.read_excel(file_path)
-print(df)
-  
+print(df.head())
+
+#Creating an individual user from the first row of the dataframe
+person = df.head(1)
+name = person.iat[0,2]
+email = person.iat[0,1]
+year = person.iat[0,3]
+number = person.iat[0,4]
+discord = person.iat[0,5]
+major = person.iat[0,6] if person.iat[0,6] is not None else ""
+preferences = False if person.iat[0,12] == "No Preference" else True
+answers = person.iloc[0, [13,34]]
+user = User(name, email, year, number, discord, major, False, preferences, answers)
+
+# if "Mentor" in person.iat[0,13]:
+#     Mentor(name, email, year, 0,"", "", False, "", [])
 '''
 Create two hashmap of hashmaps.
 
