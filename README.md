@@ -25,7 +25,7 @@ This system automates the process of matching mentees with mentors in a student 
 - M&M Cup participation enthusiasm
 - User-requested pairings
 
-Each mentee can be paired with up to **2 mentors** to provide comprehensive support and diverse perspectives.
+Each mentee can be paired with up to **2 mentors**.
 
 ##  Features
 
