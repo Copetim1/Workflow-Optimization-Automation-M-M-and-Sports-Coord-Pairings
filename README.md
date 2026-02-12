@@ -103,7 +103,7 @@ export_to_html(finalPairings, mentors, mentees, paired_mentees,
                filename='custom_report.html')
 ```
 
-## 🔧 How It Works
+##  How It Works
 
 ### Phase 1: Data Processing
 1. **Load Excel data** from survey responses
@@ -205,7 +205,7 @@ Based on Myers-Briggs compatibility research:
 - **Orange (Medium)**: Score 80-129/195
 - **Red (Low)**: Score < 80/195
 
-## 📁 File Structure
+##  File Structure
 
 ```
 mentorship-pairing/
@@ -219,7 +219,7 @@ mentorship-pairing/
     └── mentorship_report.html        # Generated report
 ```
 
-## ⚙️ Configuration
+##  Configuration
 
 ### Required Excel Columns
 
