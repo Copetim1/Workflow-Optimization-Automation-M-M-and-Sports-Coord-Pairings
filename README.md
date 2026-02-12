@@ -321,4 +321,4 @@ For questions or issues with the pairing system, contact wangt2@ufl.edu
 
 ---
 
-**Made for the SASE M&M Program** 🎓
+**Made for the SASE M&M Program** 
