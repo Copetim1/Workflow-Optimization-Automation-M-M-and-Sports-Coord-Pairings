@@ -1,0 +1,3944 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Mentorship Pairings Report</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                background-color: #f5f5f5;
+            }
+            h1 {
+                color: #333;
+                border-bottom: 3px solid #4CAF50;
+                padding-bottom: 10px;
+            }
+            h2 {
+                color: #555;
+                margin-top: 30px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                background-color: white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                margin-bottom: 30px;
+            }
+            th {
+                background-color: #4CAF50;
+                color: white;
+                padding: 12px;
+                text-align: left;
+                position: sticky;
+                top: 0;
+            }
+            td {
+                padding: 10px;
+                border-bottom: 1px solid #ddd;
+            }
+            tr:hover {
+                background-color: #f5f5f5;
+            }
+            .stats {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+            .stat-card {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .stat-number {
+                font-size: 32px;
+                font-weight: bold;
+                color: #4CAF50;
+            }
+            .stat-label {
+                color: #666;
+                margin-top: 5px;
+            }
+            .high-score { color: #4CAF50; font-weight: bold; }
+            .medium-score { color: #FF9800; }
+            .low-score { color: #F44336; }
+            .tabs {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            .tab {
+                padding: 10px 20px;
+                background: white;
+                border: none;
+                cursor: pointer;
+                border-radius: 5px 5px 0 0;
+            }
+            .tab.active {
+                background: #4CAF50;
+                color: white;
+            }
+            .tab-content {
+                display: none;
+            }
+            .tab-content.active {
+                display: block;
+            }
+            .candidate-list {
+                font-size: 0.9em;
+                line-height: 1.6;
+            }
+            .candidate-item {
+                margin: 5px 0;
+                padding: 5px;
+                background: #f9f9f9;
+                border-left: 3px solid #4CAF50;
+                padding-left: 10px;
+            }
+            .candidate-score {
+                font-weight: bold;
+                color: #4CAF50;
+            }
+            .available-badge {
+                display: inline-block;
+                background: #4CAF50;
+                color: white;
+                padding: 2px 8px;
+                border-radius: 3px;
+                font-size: 0.8em;
+                margin-left: 5px;
+            }
+            .at-capacity-badge {
+                display: inline-block;
+                background: #F44336;
+                color: white;
+                padding: 2px 8px;
+                border-radius: 3px;
+                font-size: 0.8em;
+                margin-left: 5px;
+            }
+        </style>
+        <script>
+            function showTab(tabName) {
+                // Hide all tab contents
+                const contents = document.querySelectorAll('.tab-content');
+                contents.forEach(c => c.classList.remove('active'));
+                
+                // Remove active from all tabs
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach(t => t.classList.remove('active'));
+                
+                // Show selected tab
+                document.getElementById(tabName).classList.add('active');
+                event.target.classList.add('active');
+            }
+            
+            function sortTable(tableId, column) {
+                const table = document.getElementById(tableId);
+                const rows = Array.from(table.querySelectorAll('tbody tr'));
+                const isNumeric = !isNaN(rows[0].cells[column].textContent);
+                
+                rows.sort((a, b) => {
+                    const aVal = a.cells[column].textContent;
+                    const bVal = b.cells[column].textContent;
+                    
+                    if (isNumeric) {
+                        return parseFloat(bVal) - parseFloat(aVal);
+                    }
+                    return aVal.localeCompare(bVal);
+                });
+                
+                rows.forEach(row => table.querySelector('tbody').appendChild(row));
+            }
+        </script>
+    </head>
+    <body>
+        <h1>🎓 Mentorship Pairings Report</h1>
+    
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">24</div>
+                <div class="stat-label">Total Mentors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">83</div>
+                <div class="stat-label">Total Mentees</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">69</div>
+                <div class="stat-label">Total Pairings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">23</div>
+                <div class="stat-label">Fully Paired (2 mentors)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">23</div>
+                <div class="stat-label">Partially Paired (1 mentor)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">35</div>
+                <div class="stat-label">Unpaired</div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('pairings')">All Pairings</button>
+            <button class="tab" onclick="showTab('mentors')">By Mentor</button>
+            <button class="tab" onclick="showTab('mentees')">By Mentee</button>
+            <button class="tab" onclick="showTab('unpaired')">Needs Pairing</button>
+        </div>
+    
+        <div id="pairings" class="tab-content active">
+            <h2>All Pairings</h2>
+            <table id="pairings-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('pairings-table', 0)">Mentor</th>
+                        <th onclick="sortTable('pairings-table', 1)">Mentor Major</th>
+                        <th onclick="sortTable('pairings-table', 2)">Mentee</th>
+                        <th onclick="sortTable('pairings-table', 3)">Mentee Major</th>
+                        <th onclick="sortTable('pairings-table', 4)">Score</th>
+                        <th>Mentor Email</th>
+                        <th>Mentee Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+    
+                <tr>
+                    <td>Connie Huang</td>
+                    <td>Health Science</td>
+                    <td>Lina Chen</td>
+                    <td>Biochemistry</td>
+                    <td class="medium-score">115/195</td>
+                    <td>connie.huang06ss@gmail.com</td>
+                    <td>lc202103@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Connie Huang</td>
+                    <td>Health Science</td>
+                    <td>Neil Chuang-Saladin</td>
+                    <td>Health Science</td>
+                    <td class="medium-score">110/195</td>
+                    <td>connie.huang06ss@gmail.com</td>
+                    <td>neilchuangsaladin@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Connie Huang</td>
+                    <td>Health Science</td>
+                    <td>Carol Shang</td>
+                    <td>Biomedical Engineering</td>
+                    <td class="medium-score">110/195</td>
+                    <td>connie.huang06ss@gmail.com</td>
+                    <td>xiyue.shang@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Adora Lin</td>
+                    <td>Computer Science</td>
+                    <td>Anish Nelluri</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">155/195</td>
+                    <td>adoralin@ufl.edu</td>
+                    <td>anelluri@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Adora Lin</td>
+                    <td>Computer Science</td>
+                    <td>Reyhan Rahman</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">145/195</td>
+                    <td>adoralin@ufl.edu</td>
+                    <td>rahmanr@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Bolin Chen</td>
+                    <td>Chemical Engineering</td>
+                    <td>Alyssa Jin</td>
+                    <td>Chemical Engineering</td>
+                    <td class="high-score">155/195</td>
+                    <td>bchen2@ufl.edu</td>
+                    <td>alyssajin@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Anthony Le</td>
+                    <td>Computer Science</td>
+                    <td>Felix Chang</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">140/195</td>
+                    <td>anthonyle@ufl.edu</td>
+                    <td>felix.chang0514@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Anthony Le</td>
+                    <td>Computer Science</td>
+                    <td>Rishi gandhi</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">135/195</td>
+                    <td>anthonyle@ufl.edu</td>
+                    <td>rishi.gandhi@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Anthony Le</td>
+                    <td>Computer Science</td>
+                    <td>John Garner</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">135/195</td>
+                    <td>anthonyle@ufl.edu</td>
+                    <td>johngarner@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Sagan Giardino</td>
+                    <td>Electrical Engineering</td>
+                    <td>Emlynn Rossiya</td>
+                    <td>Computer Science</td>
+                    <td class="medium-score">95/195</td>
+                    <td>sagangiardino@ufl.edu</td>
+                    <td>emlynn.rossiya@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Sagan Giardino</td>
+                    <td>Electrical Engineering</td>
+                    <td>Hoek Chen</td>
+                    <td>Electrical Engineering</td>
+                    <td class="high-score">145/195</td>
+                    <td>sagangiardino@ufl.edu</td>
+                    <td>hoek3ch14@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Sagan Giardino</td>
+                    <td>Electrical Engineering</td>
+                    <td>Sophia Lin</td>
+                    <td>Electrical Engineering</td>
+                    <td class="high-score">140/195</td>
+                    <td>sagangiardino@ufl.edu</td>
+                    <td>sophia.lin@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Gregory Peiris</td>
+                    <td>Materials Science & Engineering</td>
+                    <td>Amelia Sun</td>
+                    <td>Materials Science & Engineering</td>
+                    <td class="high-score">145/195</td>
+                    <td>gregorypeiris@ufl.edu</td>
+                    <td>amelia.sun56@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Gregory Peiris</td>
+                    <td>Materials Science & Engineering</td>
+                    <td>Sarah Mann</td>
+                    <td>Civil Engineering</td>
+                    <td class="medium-score">110/195</td>
+                    <td>gregorypeiris@ufl.edu</td>
+                    <td>mann.sarah@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Gregory Peiris</td>
+                    <td>Materials Science & Engineering</td>
+                    <td>Samih Bootwalla</td>
+                    <td>Aerospace Engineering</td>
+                    <td class="medium-score">110/195</td>
+                    <td>gregorypeiris@ufl.edu</td>
+                    <td>s.bootwalla@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Justin Doan</td>
+                    <td>Environmental Engineering Sciences</td>
+                    <td>Leonna Xie</td>
+                    <td>Computer Science</td>
+                    <td class="medium-score">120/195</td>
+                    <td>doan.justin@ufl.edu</td>
+                    <td>2007leonna@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Adrian Moreno</td>
+                    <td>Computer Science</td>
+                    <td>Emlynn Rossiya</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">160/195</td>
+                    <td>moreno.a@ufl.edu</td>
+                    <td>emlynn.rossiya@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Adrian Moreno</td>
+                    <td>Computer Science</td>
+                    <td>Rishabh Fuke</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">160/195</td>
+                    <td>moreno.a@ufl.edu</td>
+                    <td>rishabhfuke@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Adrian Moreno</td>
+                    <td>Computer Science</td>
+                    <td>Emily Chen</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">155/195</td>
+                    <td>moreno.a@ufl.edu</td>
+                    <td>chen.emily2207@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Adrian Moreno</td>
+                    <td>Computer Science</td>
+                    <td>Abe Park</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">155/195</td>
+                    <td>moreno.a@ufl.edu</td>
+                    <td>yihyun.park@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Ricky Zhang</td>
+                    <td>Computer Science</td>
+                    <td>Timothy Wang</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">150/195</td>
+                    <td>rickyzhang@ufl.edu</td>
+                    <td>wangt2@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Thomas Beegle</td>
+                    <td>Computer Science</td>
+                    <td>Emily Chen</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">155/195</td>
+                    <td>tommybeegle@icloud.com</td>
+                    <td>chen.emily2207@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Thomas Beegle</td>
+                    <td>Computer Science</td>
+                    <td>Henry Tang</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">150/195</td>
+                    <td>tommybeegle@icloud.com</td>
+                    <td>htang@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Thomas Beegle</td>
+                    <td>Computer Science</td>
+                    <td>Patrick Carey</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">145/195</td>
+                    <td>tommybeegle@icloud.com</td>
+                    <td>patrick.carey@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Thomas Beegle</td>
+                    <td>Computer Science</td>
+                    <td>Samantha Anglo</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">145/195</td>
+                    <td>tommybeegle@icloud.com</td>
+                    <td>samanthanicole.anglo@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Jacob Nguyen</td>
+                    <td>Computer Engineering</td>
+                    <td>Derek Sung</td>
+                    <td>Computer Engineering</td>
+                    <td class="high-score">155/195</td>
+                    <td>jnguyen5@ufl.edu</td>
+                    <td>d.sung@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Jacob Nguyen</td>
+                    <td>Computer Engineering</td>
+                    <td>Angelica Tang</td>
+                    <td>Computer Engineering</td>
+                    <td class="medium-score">125/195</td>
+                    <td>jnguyen5@ufl.edu</td>
+                    <td>tanga@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Jacob Nguyen</td>
+                    <td>Computer Engineering</td>
+                    <td>Nate Lacandazo </td>
+                    <td>Computer Engineering</td>
+                    <td class="medium-score">120/195</td>
+                    <td>jnguyen5@ufl.edu</td>
+                    <td>nlacandazo@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Jacob Nguyen</td>
+                    <td>Computer Engineering</td>
+                    <td>Frankie Lin</td>
+                    <td>Computer Engineering</td>
+                    <td class="medium-score">120/195</td>
+                    <td>jnguyen5@ufl.edu</td>
+                    <td>frankielin2007@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Jacob Nguyen</td>
+                    <td>Computer Engineering</td>
+                    <td>Xiaolan Liu</td>
+                    <td>Biomedical Engineering</td>
+                    <td class="medium-score">120/195</td>
+                    <td>jnguyen5@ufl.edu</td>
+                    <td>stixneophyte@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>izzy nunag</td>
+                    <td>Microbiology</td>
+                    <td>Emily Wang</td>
+                    <td>Microbiology and Cell Science</td>
+                    <td class="medium-score">100/195</td>
+                    <td>inunag@ufl.edu</td>
+                    <td>emily.wang@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>izzy nunag</td>
+                    <td>Microbiology</td>
+                    <td>Xiaolan Liu</td>
+                    <td>Biomedical Engineering</td>
+                    <td class="medium-score">95/195</td>
+                    <td>inunag@ufl.edu</td>
+                    <td>stixneophyte@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>izzy nunag</td>
+                    <td>Microbiology</td>
+                    <td>Sarah Nazareth</td>
+                    <td>Biomedical Engineering</td>
+                    <td class="medium-score">95/195</td>
+                    <td>inunag@ufl.edu</td>
+                    <td>Sarahnazareth22@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>izzy nunag</td>
+                    <td>Microbiology</td>
+                    <td>Minh Pham</td>
+                    <td>Biomedical Engineering</td>
+                    <td class="medium-score">80/195</td>
+                    <td>inunag@ufl.edu</td>
+                    <td>phamminh1@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>izzy nunag</td>
+                    <td>Microbiology</td>
+                    <td>Lina Chen</td>
+                    <td>Biochemistry</td>
+                    <td class="medium-score">80/195</td>
+                    <td>inunag@ufl.edu</td>
+                    <td>lc202103@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Andrew Lucas</td>
+                    <td>Civil Engineering</td>
+                    <td>Casey Chhour</td>
+                    <td>Civil Engineering</td>
+                    <td class="high-score">140/195</td>
+                    <td>andrewlucas255@gmail.com</td>
+                    <td>caseychhour@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Andrew Lucas</td>
+                    <td>Civil Engineering</td>
+                    <td>Samih Bootwalla</td>
+                    <td>Aerospace Engineering</td>
+                    <td class="high-score">135/195</td>
+                    <td>andrewlucas255@gmail.com</td>
+                    <td>s.bootwalla@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Rayan Bahmani</td>
+                    <td>Chemistry</td>
+                    <td>Leon Cheng</td>
+                    <td>Biomedical Engineering</td>
+                    <td class="high-score">130/195</td>
+                    <td>rayan2k5@gmail.com</td>
+                    <td>leoncheng@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Rayan Bahmani</td>
+                    <td>Chemistry</td>
+                    <td>Emily Wang</td>
+                    <td>Microbiology and Cell Science</td>
+                    <td class="high-score">130/195</td>
+                    <td>rayan2k5@gmail.com</td>
+                    <td>emily.wang@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Rayan Bahmani</td>
+                    <td>Chemistry</td>
+                    <td>Andrei Rivera</td>
+                    <td>Microbiology and Cell Science</td>
+                    <td class="medium-score">125/195</td>
+                    <td>rayan2k5@gmail.com</td>
+                    <td>andrei.rivera127@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Logan Thompson</td>
+                    <td>Nuclear Engineering</td>
+                    <td>Derek Sung</td>
+                    <td>Computer Engineering</td>
+                    <td class="medium-score">120/195</td>
+                    <td>loganthompson@ufl.edu</td>
+                    <td>d.sung@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Logan Thompson</td>
+                    <td>Nuclear Engineering</td>
+                    <td>Sarah Nazareth</td>
+                    <td>Biomedical Engineering</td>
+                    <td class="medium-score">120/195</td>
+                    <td>loganthompson@ufl.edu</td>
+                    <td>Sarahnazareth22@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Logan Thompson</td>
+                    <td>Nuclear Engineering</td>
+                    <td>Aidan McManus</td>
+                    <td>Chemical Engineering</td>
+                    <td class="medium-score">115/195</td>
+                    <td>loganthompson@ufl.edu</td>
+                    <td>aidanjmcmanus07@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Logan Thompson</td>
+                    <td>Nuclear Engineering</td>
+                    <td>Frankie Lin</td>
+                    <td>Computer Engineering</td>
+                    <td class="medium-score">110/195</td>
+                    <td>loganthompson@ufl.edu</td>
+                    <td>frankielin2007@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Logan Thompson</td>
+                    <td>Nuclear Engineering</td>
+                    <td>Jadelyn Cathis</td>
+                    <td>Biomedical Engineering</td>
+                    <td class="medium-score">110/195</td>
+                    <td>loganthompson@ufl.edu</td>
+                    <td>jadelyncathis@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Bryant Cao</td>
+                    <td>Industrial & Systems Engineering</td>
+                    <td>Orchid Nguyen</td>
+                    <td>Industrial & Systems Engineering</td>
+                    <td class="high-score">155/195</td>
+                    <td>bryantcao@ufl.edu</td>
+                    <td>orchid06nguyen@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Pryanna Pradhan</td>
+                    <td>Data Science</td>
+                    <td>Leonna Xie</td>
+                    <td>Computer Science</td>
+                    <td class="medium-score">85/195</td>
+                    <td>pryanna.pradhan@gmail.com</td>
+                    <td>2007leonna@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Pryanna Pradhan</td>
+                    <td>Data Science</td>
+                    <td>Ryan Xi</td>
+                    <td>Computer Science</td>
+                    <td class="medium-score">85/195</td>
+                    <td>pryanna.pradhan@gmail.com</td>
+                    <td>ry.xi@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Pryanna Pradhan</td>
+                    <td>Data Science</td>
+                    <td>Siya Saraswat</td>
+                    <td>Computer Science</td>
+                    <td class="medium-score">80/195</td>
+                    <td>pryanna.pradhan@gmail.com</td>
+                    <td>siyasars07@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Kenzo Fukuda</td>
+                    <td>Computer Science</td>
+                    <td>Alexander Ngov</td>
+                    <td>Computer Engineering</td>
+                    <td class="medium-score">90/195</td>
+                    <td>kenzof28@gmail.com</td>
+                    <td>ngovalexander@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Kenzo Fukuda</td>
+                    <td>Computer Science</td>
+                    <td>Vignesh Nanduri</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">170/195</td>
+                    <td>kenzof28@gmail.com</td>
+                    <td>vignesh.nanduri@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Kayla Inoa</td>
+                    <td>Computer Science</td>
+                    <td>Jamie Lin</td>
+                    <td>Mechanical Engineering</td>
+                    <td class="low-score">75/195</td>
+                    <td>kinoa718@gmail.com</td>
+                    <td>jamielin5021@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Kayla Inoa</td>
+                    <td>Computer Science</td>
+                    <td>Jadelyn Cathis</td>
+                    <td>Biomedical Engineering</td>
+                    <td class="medium-score">115/195</td>
+                    <td>kinoa718@gmail.com</td>
+                    <td>jadelyncathis@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Hannah Moribe</td>
+                    <td>Agricultural & Biological Engineering</td>
+                    <td>Angela Chen</td>
+                    <td>Mechanical Engineering</td>
+                    <td class="medium-score">95/195</td>
+                    <td>hannahmoribe@ufl.edu</td>
+                    <td>46angelachen@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Hannah Moribe</td>
+                    <td>Agricultural & Biological Engineering</td>
+                    <td>Jamie Lin</td>
+                    <td>Mechanical Engineering</td>
+                    <td class="low-score">70/195</td>
+                    <td>hannahmoribe@ufl.edu</td>
+                    <td>jamielin5021@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Hannah Moribe</td>
+                    <td>Agricultural & Biological Engineering</td>
+                    <td>Orchid Nguyen</td>
+                    <td>Industrial & Systems Engineering</td>
+                    <td class="medium-score">90/195</td>
+                    <td>hannahmoribe@ufl.edu</td>
+                    <td>orchid06nguyen@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Hannah Moribe</td>
+                    <td>Agricultural & Biological Engineering</td>
+                    <td>Aaliyah Bavosa</td>
+                    <td>Mechanical Engineering</td>
+                    <td class="medium-score">100/195</td>
+                    <td>hannahmoribe@ufl.edu</td>
+                    <td>abavosa@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Hannah Moribe</td>
+                    <td>Agricultural & Biological Engineering</td>
+                    <td>Carol Shang</td>
+                    <td>Biomedical Engineering</td>
+                    <td class="medium-score">100/195</td>
+                    <td>hannahmoribe@ufl.edu</td>
+                    <td>xiyue.shang@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Thuy Le</td>
+                    <td>Computer Science</td>
+                    <td>John Garner</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">165/195</td>
+                    <td>thuyle1@ufl.edu</td>
+                    <td>johngarner@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Thuy Le</td>
+                    <td>Computer Science</td>
+                    <td>Reyhan Rahman</td>
+                    <td>Computer Science</td>
+                    <td class="high-score">155/195</td>
+                    <td>thuyle1@ufl.edu</td>
+                    <td>rahmanr@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Tom Li</td>
+                    <td>Biology</td>
+                    <td>Leon Cheng</td>
+                    <td>Biomedical Engineering</td>
+                    <td class="high-score">145/195</td>
+                    <td>tom.li@ufl.edu</td>
+                    <td>leoncheng@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Tom Li</td>
+                    <td>Biology</td>
+                    <td>Andrei Rivera</td>
+                    <td>Microbiology and Cell Science</td>
+                    <td class="high-score">135/195</td>
+                    <td>tom.li@ufl.edu</td>
+                    <td>andrei.rivera127@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Johnson Li</td>
+                    <td>Computer Engineering</td>
+                    <td>Maggie Chen</td>
+                    <td>Pre-Pharmacy</td>
+                    <td class="medium-score">90/195</td>
+                    <td>zli6@ufl.edu</td>
+                    <td>chenmaggie@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Johnson Li</td>
+                    <td>Computer Engineering</td>
+                    <td>Nate Lacandazo </td>
+                    <td>Computer Engineering</td>
+                    <td class="high-score">180/195</td>
+                    <td>zli6@ufl.edu</td>
+                    <td>nlacandazo@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Cade Farrell</td>
+                    <td>Industrial & Systems Engineering</td>
+                    <td>Vignesh Nanduri</td>
+                    <td>Computer Science</td>
+                    <td class="medium-score">80/195</td>
+                    <td>cade@snailkite.net</td>
+                    <td>vignesh.nanduri@gmail.com</td>
+                </tr>
+            
+                <tr>
+                    <td>Cade Farrell</td>
+                    <td>Industrial & Systems Engineering</td>
+                    <td>Timothy Wang</td>
+                    <td>Computer Science</td>
+                    <td class="medium-score">100/195</td>
+                    <td>cade@snailkite.net</td>
+                    <td>wangt2@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Cade Farrell</td>
+                    <td>Industrial & Systems Engineering</td>
+                    <td>Minh Pham</td>
+                    <td>Biomedical Engineering</td>
+                    <td class="medium-score">120/195</td>
+                    <td>cade@snailkite.net</td>
+                    <td>phamminh1@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Cade Farrell</td>
+                    <td>Industrial & Systems Engineering</td>
+                    <td>Khanh Pham</td>
+                    <td>Mechanical Engineering</td>
+                    <td class="high-score">130/195</td>
+                    <td>cade@snailkite.net</td>
+                    <td>khanh.pham@ufl.edu</td>
+                </tr>
+            
+                <tr>
+                    <td>Cade Farrell</td>
+                    <td>Industrial & Systems Engineering</td>
+                    <td>Casey Chhour</td>
+                    <td>Civil Engineering</td>
+                    <td class="high-score">155/195</td>
+                    <td>cade@snailkite.net</td>
+                    <td>caseychhour@ufl.edu</td>
+                </tr>
+            
+                </tbody>
+            </table>
+        </div>
+    
+        <div id="mentors" class="tab-content">
+            <h2>Mentors and Their Mentees</h2>
+            <table id="mentors-table">
+                <thead>
+                    <tr>
+                        <th>Mentor Name</th>
+                        <th>Email</th>
+                        <th>Discord</th>
+                        <th>Major</th>
+                        <th>Mentees</th>
+                        <th>Mentee Names</th>
+                    </tr>
+                </thead>
+                <tbody>
+    
+            <tr>
+                <td>Connie Huang</td>
+                <td>connie.huang06ss@gmail.com</td>
+                <td>mewseeko</td>
+                <td>Health Science</td>
+                <td>3</td>
+                <td>Lina Chen<br>Neil Chuang-Saladin<br>Carol Shang</td>
+            </tr>
+        
+            <tr>
+                <td>Adora Lin</td>
+                <td>adoralin@ufl.edu</td>
+                <td>LmaoSaidTheCow</td>
+                <td>Computer Science</td>
+                <td>2</td>
+                <td>Anish Nelluri<br>Reyhan Rahman</td>
+            </tr>
+        
+            <tr>
+                <td>Bolin Chen</td>
+                <td>bchen2@ufl.edu</td>
+                <td>happywombat7939</td>
+                <td>Chemical Engineering</td>
+                <td>1</td>
+                <td>Alyssa Jin</td>
+            </tr>
+        
+            <tr>
+                <td>Anthony Le</td>
+                <td>anthonyle@ufl.edu</td>
+                <td>blubtatu</td>
+                <td>Computer Science</td>
+                <td>3</td>
+                <td>Felix Chang<br>Rishi gandhi<br>John Garner</td>
+            </tr>
+        
+            <tr>
+                <td>Sagan Giardino</td>
+                <td>sagangiardino@ufl.edu</td>
+                <td>soupfle</td>
+                <td>Electrical Engineering</td>
+                <td>3</td>
+                <td>Emlynn Rossiya<br>Hoek Chen<br>Sophia Lin</td>
+            </tr>
+        
+            <tr>
+                <td>Gregory Peiris</td>
+                <td>gregorypeiris@ufl.edu</td>
+                <td>Prim4l_AgGregate</td>
+                <td>Materials Science & Engineering</td>
+                <td>3</td>
+                <td>Amelia Sun<br>Sarah Mann<br>Samih Bootwalla</td>
+            </tr>
+        
+            <tr>
+                <td>Justin Doan</td>
+                <td>doan.justin@ufl.edu</td>
+                <td>justind1</td>
+                <td>Environmental Engineering Sciences</td>
+                <td>1</td>
+                <td>Leonna Xie</td>
+            </tr>
+        
+            <tr>
+                <td>Adrian Moreno</td>
+                <td>moreno.a@ufl.edu</td>
+                <td>uppertoby</td>
+                <td>Computer Science</td>
+                <td>4</td>
+                <td>Emlynn Rossiya<br>Rishabh Fuke<br>Emily Chen<br>Abe Park</td>
+            </tr>
+        
+            <tr>
+                <td>Ricky Zhang</td>
+                <td>rickyzhang@ufl.edu</td>
+                <td>rickroyale</td>
+                <td>Computer Science</td>
+                <td>1</td>
+                <td>Timothy Wang</td>
+            </tr>
+        
+            <tr>
+                <td>Thomas Beegle</td>
+                <td>tommybeegle@icloud.com</td>
+                <td>Tbeegle22</td>
+                <td>Computer Science</td>
+                <td>4</td>
+                <td>Emily Chen<br>Henry Tang<br>Patrick Carey<br>Samantha Anglo</td>
+            </tr>
+        
+            <tr>
+                <td>Jacob Nguyen</td>
+                <td>jnguyen5@ufl.edu</td>
+                <td>cheetoblast3</td>
+                <td>Computer Engineering</td>
+                <td>5</td>
+                <td>Derek Sung<br>Angelica Tang<br>Nate Lacandazo <br>Frankie Lin<br>Xiaolan Liu</td>
+            </tr>
+        
+            <tr>
+                <td>izzy nunag</td>
+                <td>inunag@ufl.edu</td>
+                <td>fiestyfilipino07</td>
+                <td>Microbiology</td>
+                <td>5</td>
+                <td>Emily Wang<br>Xiaolan Liu<br>Sarah Nazareth<br>Minh Pham<br>Lina Chen</td>
+            </tr>
+        
+            <tr>
+                <td>Andrew Lucas</td>
+                <td>andrewlucas255@gmail.com</td>
+                <td>pickauser_name</td>
+                <td>Civil Engineering</td>
+                <td>2</td>
+                <td>Casey Chhour<br>Samih Bootwalla</td>
+            </tr>
+        
+            <tr>
+                <td>Rayan Bahmani</td>
+                <td>rayan2k5@gmail.com</td>
+                <td>tobyorange</td>
+                <td>Chemistry</td>
+                <td>3</td>
+                <td>Leon Cheng<br>Emily Wang<br>Andrei Rivera</td>
+            </tr>
+        
+            <tr>
+                <td>Logan Thompson</td>
+                <td>loganthompson@ufl.edu</td>
+                <td>loggytommy</td>
+                <td>Nuclear Engineering</td>
+                <td>5</td>
+                <td>Derek Sung<br>Sarah Nazareth<br>Aidan McManus<br>Frankie Lin<br>Jadelyn Cathis</td>
+            </tr>
+        
+            <tr>
+                <td>Bryant Cao</td>
+                <td>bryantcao@ufl.edu</td>
+                <td>3rryrant</td>
+                <td>Industrial & Systems Engineering</td>
+                <td>1</td>
+                <td>Orchid Nguyen</td>
+            </tr>
+        
+            <tr>
+                <td>Pryanna Pradhan</td>
+                <td>pryanna.pradhan@gmail.com</td>
+                <td>pryanna_prad</td>
+                <td>Data Science</td>
+                <td>3</td>
+                <td>Leonna Xie<br>Ryan Xi<br>Siya Saraswat</td>
+            </tr>
+        
+            <tr>
+                <td>Kenzo Fukuda</td>
+                <td>kenzof28@gmail.com</td>
+                <td>kofki</td>
+                <td>Computer Science</td>
+                <td>2</td>
+                <td>Alexander Ngov<br>Vignesh Nanduri</td>
+            </tr>
+        
+            <tr>
+                <td>Kayla Inoa</td>
+                <td>kinoa718@gmail.com</td>
+                <td>kaylainoa</td>
+                <td>Computer Science</td>
+                <td>2</td>
+                <td>Jamie Lin<br>Jadelyn Cathis</td>
+            </tr>
+        
+            <tr>
+                <td>Hannah Moribe</td>
+                <td>hannahmoribe@ufl.edu</td>
+                <td>hann.m</td>
+                <td>Agricultural & Biological Engineering</td>
+                <td>5</td>
+                <td>Angela Chen<br>Jamie Lin<br>Orchid Nguyen<br>Aaliyah Bavosa<br>Carol Shang</td>
+            </tr>
+        
+            <tr>
+                <td>Thuy Le</td>
+                <td>thuyle1@ufl.edu</td>
+                <td>lazysince</td>
+                <td>Computer Science</td>
+                <td>2</td>
+                <td>John Garner<br>Reyhan Rahman</td>
+            </tr>
+        
+            <tr>
+                <td>Tom Li</td>
+                <td>tom.li@ufl.edu</td>
+                <td>taopeach</td>
+                <td>Biology</td>
+                <td>2</td>
+                <td>Leon Cheng<br>Andrei Rivera</td>
+            </tr>
+        
+            <tr>
+                <td>Johnson Li</td>
+                <td>zli6@ufl.edu</td>
+                <td>ggsmd1202</td>
+                <td>Computer Engineering</td>
+                <td>2</td>
+                <td>Maggie Chen<br>Nate Lacandazo </td>
+            </tr>
+        
+            <tr>
+                <td>Cade Farrell</td>
+                <td>cade@snailkite.net</td>
+                <td>ninjawylan</td>
+                <td>Industrial & Systems Engineering</td>
+                <td>5</td>
+                <td>Vignesh Nanduri<br>Timothy Wang<br>Minh Pham<br>Khanh Pham<br>Casey Chhour</td>
+            </tr>
+        
+                </tbody>
+            </table>
+        </div>
+    
+        <div id="mentees" class="tab-content">
+            <h2>Mentees and Their Mentors</h2>
+            <table id="mentees-table">
+                <thead>
+                    <tr>
+                        <th>Mentee Name</th>
+                        <th>Email</th>
+                        <th>Discord</th>
+                        <th>Major</th>
+                        <th># Mentors</th>
+                        <th>Mentor Names</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+    
+            <tr>
+                <td>Neil Chuang-Saladin</td>
+                <td>neilchuangsaladin@gmail.com</td>
+                <td>meal4two</td>
+                <td>Health Science</td>
+                <td>1/2</td>
+                <td>Connie Huang</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Aidan McManus</td>
+                <td>aidanjmcmanus07@gmail.com</td>
+                <td>neo_vortex</td>
+                <td>Chemical Engineering</td>
+                <td>1/2</td>
+                <td>Logan Thompson</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Nate Lacandazo </td>
+                <td>nlacandazo@ufl.edu</td>
+                <td>kuyadrake</td>
+                <td>Computer Engineering</td>
+                <td>2/2</td>
+                <td>Johnson Li<br>Jacob Nguyen</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Khang Lam</td>
+                <td>khang.lam@ufl.edu</td>
+                <td>khangiskhan.</td>
+                <td>Mechanical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Leon Cheng</td>
+                <td>leoncheng@ufl.edu</td>
+                <td>nan</td>
+                <td>Biomedical Engineering</td>
+                <td>2/2</td>
+                <td>Tom Li<br>Rayan Bahmani</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Sarah Mann</td>
+                <td>mann.sarah@ufl.edu</td>
+                <td>_happywombat</td>
+                <td>Civil Engineering</td>
+                <td>1/2</td>
+                <td>Gregory Peiris</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Nathan Chau</td>
+                <td>nathan.chau@ufl.edu</td>
+                <td>kingipo</td>
+                <td>Mechanical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Samih Bootwalla</td>
+                <td>s.bootwalla@ufl.edu</td>
+                <td>slimpandesal</td>
+                <td>Aerospace Engineering</td>
+                <td>2/2</td>
+                <td>Andrew Lucas<br>Gregory Peiris</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Vignesh Nanduri</td>
+                <td>vignesh.nanduri@gmail.com</td>
+                <td>vnan__</td>
+                <td>Computer Science</td>
+                <td>2/2</td>
+                <td>Cade Farrell<br>Kenzo Fukuda</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Siya Saraswat</td>
+                <td>siyasars07@gmail.com</td>
+                <td>siya08880</td>
+                <td>Computer Science</td>
+                <td>1/2</td>
+                <td>Pryanna Pradhan</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Frankie Lin</td>
+                <td>frankielin2007@gmail.com</td>
+                <td>hubba jubba</td>
+                <td>Computer Engineering</td>
+                <td>2/2</td>
+                <td>Jacob Nguyen<br>Logan Thompson</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Andrei Rivera</td>
+                <td>andrei.rivera127@gmail.com</td>
+                <td>the1whocreep</td>
+                <td>Microbiology and Cell Science</td>
+                <td>2/2</td>
+                <td>Tom Li<br>Rayan Bahmani</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Diane Cherian</td>
+                <td>dianecherian@ufl.edu</td>
+                <td>dc_7267_</td>
+                <td>Aerospace Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Elle Escarcha</td>
+                <td>escarchaelle@gmail.com</td>
+                <td>vegansockss</td>
+                <td>Mechanical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Bo-Lin Chen</td>
+                <td>bchen2@ufl.edu</td>
+                <td>happywombat7939</td>
+                <td>Chemical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Reyhan Rahman</td>
+                <td>rahmanr@ufl.edu</td>
+                <td>rey.z</td>
+                <td>Computer Science</td>
+                <td>2/2</td>
+                <td>Adora Lin<br>Thuy Le</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Sophia Lin</td>
+                <td>sophia.lin@ufl.edu</td>
+                <td>soapmon</td>
+                <td>Electrical Engineering</td>
+                <td>1/2</td>
+                <td>Sagan Giardino</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Jadelyn Cathis</td>
+                <td>jadelyncathis@gmail.com</td>
+                <td>feat.jade</td>
+                <td>Biomedical Engineering</td>
+                <td>2/2</td>
+                <td>Kayla Inoa<br>Logan Thompson</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Rishi gandhi</td>
+                <td>rishi.gandhi@ufl.edu</td>
+                <td>rishu297</td>
+                <td>Computer Science</td>
+                <td>1/2</td>
+                <td>Anthony Le</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Angelica Tang</td>
+                <td>tanga@ufl.edu</td>
+                <td>zwalala</td>
+                <td>Computer Engineering</td>
+                <td>1/2</td>
+                <td>Jacob Nguyen</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Anish Nelluri</td>
+                <td>anelluri@ufl.edu</td>
+                <td>anishram07</td>
+                <td>Computer Science</td>
+                <td>1/2</td>
+                <td>Adora Lin</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Gabriel Goluch</td>
+                <td>ggoluch14@gmail.com</td>
+                <td>cloudlover911</td>
+                <td>Computer Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Jacob Nguyen</td>
+                <td>jacobnguyen0121@gmail.com</td>
+                <td>cheetoblast3</td>
+                <td>Computer Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Derek Sung</td>
+                <td>d.sung@ufl.edu</td>
+                <td>derkee5089</td>
+                <td>Computer Engineering</td>
+                <td>2/2</td>
+                <td>Jacob Nguyen<br>Logan Thompson</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Stephen Yu</td>
+                <td>stephenyu@ufl.edu</td>
+                <td>Syuyu</td>
+                <td>Biology</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Xiaolan Liu</td>
+                <td>stixneophyte@gmail.com</td>
+                <td>ikonical</td>
+                <td>Biomedical Engineering</td>
+                <td>2/2</td>
+                <td>Jacob Nguyen<br>izzy nunag</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Jason Cheng</td>
+                <td>jasoncheng4019@gmail.com</td>
+                <td>awesome4019</td>
+                <td>Chemical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Ahsan Rahul</td>
+                <td>rahul.ahsan10@gmail.com</td>
+                <td>ojconcentrate</td>
+                <td>Digital Arts & Sciences</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Emlynn Rossiya</td>
+                <td>emlynn.rossiya@ufl.edu</td>
+                <td>hug.dealer.</td>
+                <td>Computer Science</td>
+                <td>2/2</td>
+                <td>Sagan Giardino<br>Adrian Moreno</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Alexis Loo</td>
+                <td>a.loo@ufl.edu</td>
+                <td>pyn.t.dyanasaur</td>
+                <td>Mechanical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Ananda Chatterjee</td>
+                <td>anandachatterjee@ufl.edu</td>
+                <td>nan</td>
+                <td>Statistics </td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Emily Wang</td>
+                <td>emily.wang@ufl.edu</td>
+                <td>xinyuee</td>
+                <td>Microbiology and Cell Science</td>
+                <td>2/2</td>
+                <td>Rayan Bahmani<br>izzy nunag</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Leonna Xie</td>
+                <td>2007leonna@gmail.com</td>
+                <td>foreverlydusk</td>
+                <td>Computer Science</td>
+                <td>2/2</td>
+                <td>Justin Doan<br>Pryanna Pradhan</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Emily Chen</td>
+                <td>chen.emily2207@gmail.com</td>
+                <td>em.ch22</td>
+                <td>Computer Science</td>
+                <td>2/2</td>
+                <td>Adrian Moreno<br>Thomas Beegle</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Felix Chang</td>
+                <td>felix.chang0514@gmail.com</td>
+                <td>stellarix01</td>
+                <td>Computer Science</td>
+                <td>1/2</td>
+                <td>Anthony Le</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Minh Pham</td>
+                <td>phamminh1@ufl.edu</td>
+                <td>mihn0369</td>
+                <td>Biomedical Engineering</td>
+                <td>2/2</td>
+                <td>Cade Farrell<br>izzy nunag</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Steven Van den Bosch</td>
+                <td>s.vandenbosch@ufl.edu</td>
+                <td>nan</td>
+                <td>Civil Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Lina Chen</td>
+                <td>lc202103@gmail.com</td>
+                <td>.itzstar</td>
+                <td>Biochemistry</td>
+                <td>2/2</td>
+                <td>Connie Huang<br>izzy nunag</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Kirk Vinas</td>
+                <td>k.vinas@ufl.edu</td>
+                <td>cabarosa</td>
+                <td>Biomedical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Steven Lin</td>
+                <td>linsteven@ufl.edu</td>
+                <td>potatolover1688</td>
+                <td>Mechanical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Emma Kerr</td>
+                <td>emmakerr@ufl.edu</td>
+                <td>e.yt.k</td>
+                <td>Physics (emphasis in medical physics)</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Giao Tran</td>
+                <td>giaotran@ufl.edu</td>
+                <td>nan</td>
+                <td>Psychology - BCN</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Carol Shang</td>
+                <td>xiyue.shang@ufl.edu</td>
+                <td>karoll8714</td>
+                <td>Biomedical Engineering</td>
+                <td>2/2</td>
+                <td>Connie Huang<br>Hannah Moribe</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Gargi Ojha</td>
+                <td>gargiojha@ufl.edu</td>
+                <td>GBOPHOBIA</td>
+                <td>Biomedical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>John Garner</td>
+                <td>johngarner@ufl.edu</td>
+                <td>john.garner</td>
+                <td>Computer Science</td>
+                <td>2/2</td>
+                <td>Thuy Le<br>Anthony Le</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Samantha Anglo</td>
+                <td>samanthanicole.anglo@gmail.com</td>
+                <td>nan</td>
+                <td>Computer Science</td>
+                <td>1/2</td>
+                <td>Thomas Beegle</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Jamie Lin</td>
+                <td>jamielin5021@gmail.com</td>
+                <td>sparklingwinter0583</td>
+                <td>Mechanical Engineering</td>
+                <td>2/2</td>
+                <td>Kayla Inoa<br>Hannah Moribe</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Jammyl Sadsarin</td>
+                <td>jsadsarin1@ufl.edu</td>
+                <td>jaydesuu</td>
+                <td>Civil Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Abe Park</td>
+                <td>yihyun.park@ufl.edu</td>
+                <td>spac3_dust</td>
+                <td>Computer Science</td>
+                <td>1/2</td>
+                <td>Adrian Moreno</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Alexander Ngov</td>
+                <td>ngovalexander@gmail.com</td>
+                <td>randomname3924</td>
+                <td>Computer Engineering</td>
+                <td>1/2</td>
+                <td>Kenzo Fukuda</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Hoek Chen</td>
+                <td>hoek3ch14@gmail.com</td>
+                <td>sotrue.1</td>
+                <td>Electrical Engineering</td>
+                <td>1/2</td>
+                <td>Sagan Giardino</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Amelia Sun</td>
+                <td>amelia.sun56@gmail.com</td>
+                <td>ignoranceisfish</td>
+                <td>Materials Science & Engineering</td>
+                <td>1/2</td>
+                <td>Gregory Peiris</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Timothy Wang</td>
+                <td>wangt2@ufl.edu</td>
+                <td>goDasF</td>
+                <td>Computer Science</td>
+                <td>2/2</td>
+                <td>Cade Farrell<br>Ricky Zhang</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Henry Tang</td>
+                <td>htang@ufl.edu</td>
+                <td>already joined</td>
+                <td>Computer Science</td>
+                <td>1/2</td>
+                <td>Thomas Beegle</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Shilpa Shiva</td>
+                <td>shivas@ufl.edu</td>
+                <td>nan</td>
+                <td>Aerospace Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Andrew Lo</td>
+                <td>andrewlo6167@gmail.com</td>
+                <td>poy.o</td>
+                <td>Computer Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Vaishnavi Vijayaraghavan</td>
+                <td>v.vijayaraghavan@ufl.edu</td>
+                <td>vaishnavi_37424</td>
+                <td>Computer Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Alvin Li</td>
+                <td>liAlvin.07@gmail.com</td>
+                <td>._.towa._.</td>
+                <td>Aerospace Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Patrick Carey</td>
+                <td>patrick.carey@ufl.edu</td>
+                <td>eyes720</td>
+                <td>Computer Science</td>
+                <td>1/2</td>
+                <td>Thomas Beegle</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Patrick Carey</td>
+                <td>patrick.carey@ufl.edu</td>
+                <td>eyes720</td>
+                <td>Computer Science</td>
+                <td>1/2</td>
+                <td>Thomas Beegle</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Alyssa Jin</td>
+                <td>alyssajin@ufl.edu</td>
+                <td>aly6365</td>
+                <td>Chemical Engineering</td>
+                <td>1/2</td>
+                <td>Bolin Chen</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Reyhan Rahman</td>
+                <td>rahmanr@ufl.edu</td>
+                <td>rey.z</td>
+                <td>Computer Science</td>
+                <td>2/2</td>
+                <td>Adora Lin<br>Thuy Le</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Saee Joshi</td>
+                <td>saeejoshi@ufl.edu</td>
+                <td>saeeee.j</td>
+                <td>Microbiology and Cell Sciences / Psych. BCN</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Atharva Rajanala </td>
+                <td>atharva.rajanala@ufl.edu</td>
+                <td>12atharva07</td>
+                <td>Mechanical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Max Chynwat</td>
+                <td>mchynwat@gmail.com</td>
+                <td>kwla</td>
+                <td>Industrial & Systems Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Angela Chen</td>
+                <td>46angelachen@gmail.com</td>
+                <td>kymu__</td>
+                <td>Mechanical Engineering</td>
+                <td>1/2</td>
+                <td>Hannah Moribe</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Vinh (Ethan) Nguyen</td>
+                <td>nguyen.vinh@ufl.edu</td>
+                <td>shbeans</td>
+                <td>Mathematics</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Shuncheng Liang</td>
+                <td>liang.s@ufl.edu</td>
+                <td>shadowpea</td>
+                <td>Computer Science</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Khanh Pham</td>
+                <td>khanh.pham@ufl.edu</td>
+                <td>kai1zon</td>
+                <td>Mechanical Engineering</td>
+                <td>1/2</td>
+                <td>Cade Farrell</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Rishabh Fuke</td>
+                <td>rishabhfuke@ufl.edu</td>
+                <td>nan</td>
+                <td>Computer Science</td>
+                <td>1/2</td>
+                <td>Adrian Moreno</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Arlan Suleimanov</td>
+                <td>asuleimanov@ufl.edu</td>
+                <td>arlan3145</td>
+                <td>Computer Science</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Logan Duggal</td>
+                <td>loganduggal1@gmail.com</td>
+                <td>logansduggal123</td>
+                <td>Electrical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Aaliyah Bavosa</td>
+                <td>abavosa@ufl.edu</td>
+                <td>liyah8122</td>
+                <td>Mechanical Engineering</td>
+                <td>1/2</td>
+                <td>Hannah Moribe</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Owen Chiu</td>
+                <td>owenchiu@ufl.edu</td>
+                <td>nan</td>
+                <td>Mechanical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Yash Patel</td>
+                <td>yashtrini2006@gmail.com</td>
+                <td>Yash</td>
+                <td>Civil Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Casey Chhour</td>
+                <td>caseychhour@ufl.edu</td>
+                <td>Supreme_GX</td>
+                <td>Civil Engineering</td>
+                <td>2/2</td>
+                <td>Andrew Lucas<br>Cade Farrell</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Ayaka Shiomitsu</td>
+                <td>ashiomitsu@ufl.edu</td>
+                <td>ayakas0</td>
+                <td>Computer Science</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Maggie Chen</td>
+                <td>chenmaggie@ufl.edu</td>
+                <td>nan</td>
+                <td>Pre-Pharmacy</td>
+                <td>1/2</td>
+                <td>Johnson Li</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Lauren Cugno</td>
+                <td>laurencugno075@gmail.com</td>
+                <td>renny1523</td>
+                <td>Chemical Engineering</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Ryan Xi</td>
+                <td>ry.xi@ufl.edu</td>
+                <td>fadedmist</td>
+                <td>Computer Science</td>
+                <td>1/2</td>
+                <td>Pryanna Pradhan</td>
+                <td class="medium-score">Partially Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Orchid Nguyen</td>
+                <td>orchid06nguyen@gmail.com</td>
+                <td>xelqi_</td>
+                <td>Industrial & Systems Engineering</td>
+                <td>2/2</td>
+                <td>Hannah Moribe<br>Bryant Cao</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+            <tr>
+                <td>Johnson Li</td>
+                <td>zli6@ufl.edu</td>
+                <td>ggsmd1202</td>
+                <td>Computer Science</td>
+                <td>0/2</td>
+                <td>None</td>
+                <td class="low-score">Unpaired</td>
+            </tr>
+        
+            <tr>
+                <td>Sarah Nazareth</td>
+                <td>Sarahnazareth22@gmail.com</td>
+                <td>sarah.naz_</td>
+                <td>Biomedical Engineering</td>
+                <td>2/2</td>
+                <td>izzy nunag<br>Logan Thompson</td>
+                <td class="high-score">Fully Paired</td>
+            </tr>
+        
+                </tbody>
+            </table>
+        </div>
+    
+        <div id="unpaired" class="tab-content">
+            <h2>Mentees Needing Pairing</h2>
+            <table id="unpaired-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Major</th>
+                        <th>Current Mentors</th>
+                        <th>Top 5 Mentor Candidates</th>
+                    </tr>
+                </thead>
+                <tbody>
+    
+                <tr>
+                    <td><strong>Neil Chuang-Saladin</strong></td>
+                    <td>neilchuangsaladin@gmail.com</td>
+                    <td>Health Science</td>
+                    <td>1/2 (Connie Huang)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Connie Huang</strong> (Health Science)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Aidan McManus</strong></td>
+                    <td>aidanjmcmanus07@gmail.com</td>
+                    <td>Chemical Engineering</td>
+                    <td>1/2 (Logan Thompson)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Sagan Giardino</strong> (Electrical Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Khang Lam</strong></td>
+                    <td>khang.lam@ufl.edu</td>
+                    <td>Mechanical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Jacob Nguyen</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Sarah Mann</strong></td>
+                    <td>mann.sarah@ufl.edu</td>
+                    <td>Civil Engineering</td>
+                    <td>1/2 (Gregory Peiris)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Gregory Peiris</strong> (Materials Science & Engineering)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Nathan Chau</strong></td>
+                    <td>nathan.chau@ufl.edu</td>
+                    <td>Mechanical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Adora Lin</strong> (Computer Science)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Siya Saraswat</strong></td>
+                    <td>siyasars07@gmail.com</td>
+                    <td>Computer Science</td>
+                    <td>1/2 (Pryanna Pradhan)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Kayla Inoa</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Diane Cherian</strong></td>
+                    <td>dianecherian@ufl.edu</td>
+                    <td>Aerospace Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list"></div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Elle Escarcha</strong></td>
+                    <td>escarchaelle@gmail.com</td>
+                    <td>Mechanical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list"></div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Bo-Lin Chen</strong></td>
+                    <td>bchen2@ufl.edu</td>
+                    <td>Chemical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Gregory Peiris</strong> (Materials Science & Engineering)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Sophia Lin</strong></td>
+                    <td>sophia.lin@ufl.edu</td>
+                    <td>Electrical Engineering</td>
+                    <td>1/2 (Sagan Giardino)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Sagan Giardino</strong> (Electrical Engineering)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Rishi gandhi</strong></td>
+                    <td>rishi.gandhi@ufl.edu</td>
+                    <td>Computer Science</td>
+                    <td>1/2 (Anthony Le)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Kayla Inoa</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Anthony Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Angelica Tang</strong></td>
+                    <td>tanga@ufl.edu</td>
+                    <td>Computer Engineering</td>
+                    <td>1/2 (Jacob Nguyen)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Jacob Nguyen</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Sagan Giardino</strong> (Electrical Engineering)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Anish Nelluri</strong></td>
+                    <td>anelluri@ufl.edu</td>
+                    <td>Computer Science</td>
+                    <td>1/2 (Adora Lin)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="high-score">Score: 170/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Adora Lin</strong> (Computer Science)
+                        - <span class="high-score">Score: 155/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Gabriel Goluch</strong></td>
+                    <td>ggoluch14@gmail.com</td>
+                    <td>Computer Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 170/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Jacob Nguyen</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Jacob Nguyen</strong></td>
+                    <td>jacobnguyen0121@gmail.com</td>
+                    <td>Computer Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="medium-score">Score: 100/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 80/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Anthony Le</strong> (Computer Science)
+                        - <span class="low-score">Score: 75/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Stephen Yu</strong></td>
+                    <td>stephenyu@ufl.edu</td>
+                    <td>Biology</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Anthony Le</strong> (Computer Science)
+                        - <span class="low-score">Score: 65/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="low-score">Score: 60/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="low-score">Score: 45/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Gregory Peiris</strong> (Materials Science & Engineering)
+                        - <span class="low-score">Score: 40/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="low-score">Score: 30/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Jason Cheng</strong></td>
+                    <td>jasoncheng4019@gmail.com</td>
+                    <td>Chemical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Anthony Le</strong> (Computer Science)
+                        - <span class="medium-score">Score: 100/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Ahsan Rahul</strong></td>
+                    <td>rahul.ahsan10@gmail.com</td>
+                    <td>Digital Arts & Sciences</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Gregory Peiris</strong> (Materials Science & Engineering)
+                        - <span class="medium-score">Score: 90/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Alexis Loo</strong></td>
+                    <td>a.loo@ufl.edu</td>
+                    <td>Mechanical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list"></div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Ananda Chatterjee</strong></td>
+                    <td>anandachatterjee@ufl.edu</td>
+                    <td>Statistics </td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Gregory Peiris</strong> (Materials Science & Engineering)
+                        - <span class="low-score">Score: 25/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Felix Chang</strong></td>
+                    <td>felix.chang0514@gmail.com</td>
+                    <td>Computer Science</td>
+                    <td>1/2 (Anthony Le)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Kayla Inoa</strong> (Computer Science)
+                        - <span class="high-score">Score: 155/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Anthony Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Steven Van den Bosch</strong></td>
+                    <td>s.vandenbosch@ufl.edu</td>
+                    <td>Civil Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list"></div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Kirk Vinas</strong></td>
+                    <td>k.vinas@ufl.edu</td>
+                    <td>Biomedical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 85/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Gregory Peiris</strong> (Materials Science & Engineering)
+                        - <span class="medium-score">Score: 80/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="low-score">Score: 75/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Steven Lin</strong></td>
+                    <td>linsteven@ufl.edu</td>
+                    <td>Mechanical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list"></div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Emma Kerr</strong></td>
+                    <td>emmakerr@ufl.edu</td>
+                    <td>Physics (emphasis in medical physics)</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="medium-score">Score: 100/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Rayan Bahmani</strong> (Chemistry)
+                        - <span class="medium-score">Score: 95/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Kayla Inoa</strong> (Computer Science)
+                        - <span class="medium-score">Score: 85/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Tom Li</strong> (Biology)
+                        - <span class="medium-score">Score: 85/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 85/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Giao Tran</strong></td>
+                    <td>giaotran@ufl.edu</td>
+                    <td>Psychology - BCN</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Gregory Peiris</strong> (Materials Science & Engineering)
+                        - <span class="medium-score">Score: 95/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Tom Li</strong> (Biology)
+                        - <span class="medium-score">Score: 95/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 90/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="low-score">Score: 75/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="low-score">Score: 75/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Gargi Ojha</strong></td>
+                    <td>gargiojha@ufl.edu</td>
+                    <td>Biomedical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Andrew Lucas</strong> (Civil Engineering)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Samantha Anglo</strong></td>
+                    <td>samanthanicole.anglo@gmail.com</td>
+                    <td>Computer Science</td>
+                    <td>1/2 (Thomas Beegle)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="high-score">Score: 170/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Adora Lin</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Jammyl Sadsarin</strong></td>
+                    <td>jsadsarin1@ufl.edu</td>
+                    <td>Civil Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 90/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Anthony Le</strong> (Computer Science)
+                        - <span class="medium-score">Score: 85/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Abe Park</strong></td>
+                    <td>yihyun.park@ufl.edu</td>
+                    <td>Computer Science</td>
+                    <td>1/2 (Adrian Moreno)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 155/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Adora Lin</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Alexander Ngov</strong></td>
+                    <td>ngovalexander@gmail.com</td>
+                    <td>Computer Engineering</td>
+                    <td>1/2 (Kenzo Fukuda)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Jacob Nguyen</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Sagan Giardino</strong> (Electrical Engineering)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Hoek Chen</strong></td>
+                    <td>hoek3ch14@gmail.com</td>
+                    <td>Electrical Engineering</td>
+                    <td>1/2 (Sagan Giardino)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Sagan Giardino</strong> (Electrical Engineering)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Andrew Lucas</strong> (Civil Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Amelia Sun</strong></td>
+                    <td>amelia.sun56@gmail.com</td>
+                    <td>Materials Science & Engineering</td>
+                    <td>1/2 (Gregory Peiris)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Gregory Peiris</strong> (Materials Science & Engineering)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="medium-score">Score: 95/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 95/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="medium-score">Score: 95/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Henry Tang</strong></td>
+                    <td>htang@ufl.edu</td>
+                    <td>Computer Science</td>
+                    <td>1/2 (Thomas Beegle)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Adora Lin</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Ricky Zhang</strong> (Computer Science)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Shilpa Shiva</strong></td>
+                    <td>shivas@ufl.edu</td>
+                    <td>Aerospace Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Andrew Lo</strong></td>
+                    <td>andrewlo6167@gmail.com</td>
+                    <td>Computer Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 100/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="medium-score">Score: 90/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 80/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Gregory Peiris</strong> (Materials Science & Engineering)
+                        - <span class="low-score">Score: 70/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Vaishnavi Vijayaraghavan</strong></td>
+                    <td>v.vijayaraghavan@ufl.edu</td>
+                    <td>Computer Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Gregory Peiris</strong> (Materials Science & Engineering)
+                        - <span class="medium-score">Score: 95/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Alvin Li</strong></td>
+                    <td>liAlvin.07@gmail.com</td>
+                    <td>Aerospace Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list"></div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Patrick Carey</strong></td>
+                    <td>patrick.carey@ufl.edu</td>
+                    <td>Computer Science</td>
+                    <td>1/2 (Thomas Beegle)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Kayla Inoa</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Patrick Carey</strong></td>
+                    <td>patrick.carey@ufl.edu</td>
+                    <td>Computer Science</td>
+                    <td>1/2 (Thomas Beegle)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 155/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Adora Lin</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Alyssa Jin</strong></td>
+                    <td>alyssajin@ufl.edu</td>
+                    <td>Chemical Engineering</td>
+                    <td>1/2 (Bolin Chen)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="high-score">Score: 155/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 155/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Sagan Giardino</strong> (Electrical Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Saee Joshi</strong></td>
+                    <td>saeejoshi@ufl.edu</td>
+                    <td>Microbiology and Cell Sciences / Psych. BCN</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Tom Li</strong> (Biology)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 100/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="medium-score">Score: 95/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="medium-score">Score: 90/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 90/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Atharva Rajanala </strong></td>
+                    <td>atharva.rajanala@ufl.edu</td>
+                    <td>Mechanical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list"></div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Max Chynwat</strong></td>
+                    <td>mchynwat@gmail.com</td>
+                    <td>Industrial & Systems Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Jacob Nguyen</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Angela Chen</strong></td>
+                    <td>46angelachen@gmail.com</td>
+                    <td>Mechanical Engineering</td>
+                    <td>1/2 (Hannah Moribe)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Andrew Lucas</strong> (Civil Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Sagan Giardino</strong> (Electrical Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Vinh (Ethan) Nguyen</strong></td>
+                    <td>nguyen.vinh@ufl.edu</td>
+                    <td>Mathematics</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Tom Li</strong> (Biology)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Gregory Peiris</strong> (Materials Science & Engineering)
+                        - <span class="medium-score">Score: 95/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="medium-score">Score: 90/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 90/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Shuncheng Liang</strong></td>
+                    <td>liang.s@ufl.edu</td>
+                    <td>Computer Science</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Kayla Inoa</strong> (Computer Science)
+                        - <span class="high-score">Score: 160/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="high-score">Score: 155/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Adora Lin</strong> (Computer Science)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Khanh Pham</strong></td>
+                    <td>khanh.pham@ufl.edu</td>
+                    <td>Mechanical Engineering</td>
+                    <td>1/2 (Cade Farrell)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Rishabh Fuke</strong></td>
+                    <td>rishabhfuke@ufl.edu</td>
+                    <td>Computer Science</td>
+                    <td>1/2 (Adrian Moreno)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 160/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 155/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Ricky Zhang</strong> (Computer Science)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Anthony Le</strong> (Computer Science)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Arlan Suleimanov</strong></td>
+                    <td>asuleimanov@ufl.edu</td>
+                    <td>Computer Science</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Ricky Zhang</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Thomas Beegle</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Kayla Inoa</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Logan Duggal</strong></td>
+                    <td>loganduggal1@gmail.com</td>
+                    <td>Electrical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Sagan Giardino</strong> (Electrical Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Aaliyah Bavosa</strong></td>
+                    <td>abavosa@ufl.edu</td>
+                    <td>Mechanical Engineering</td>
+                    <td>1/2 (Hannah Moribe)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 155/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Andrew Lucas</strong> (Civil Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Sagan Giardino</strong> (Electrical Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Owen Chiu</strong></td>
+                    <td>owenchiu@ufl.edu</td>
+                    <td>Mechanical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Cade Farrell</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Jacob Nguyen</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 110/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="medium-score">Score: 95/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="medium-score">Score: 95/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Yash Patel</strong></td>
+                    <td>yashtrini2006@gmail.com</td>
+                    <td>Civil Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 160/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Andrew Lucas</strong> (Civil Engineering)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Sagan Giardino</strong> (Electrical Engineering)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Ayaka Shiomitsu</strong></td>
+                    <td>ashiomitsu@ufl.edu</td>
+                    <td>Computer Science</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Kayla Inoa</strong> (Computer Science)
+                        - <span class="high-score">Score: 165/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Anthony Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Maggie Chen</strong></td>
+                    <td>chenmaggie@ufl.edu</td>
+                    <td>Pre-Pharmacy</td>
+                    <td>1/2 (Johnson Li)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Tom Li</strong> (Biology)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Rayan Bahmani</strong> (Chemistry)
+                        - <span class="medium-score">Score: 105/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Justin Doan</strong> (Environmental Engineering Sciences)
+                        - <span class="medium-score">Score: 100/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="medium-score">Score: 90/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Gregory Peiris</strong> (Materials Science & Engineering)
+                        - <span class="medium-score">Score: 90/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Lauren Cugno</strong></td>
+                    <td>laurencugno075@gmail.com</td>
+                    <td>Chemical Engineering</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Bolin Chen</strong> (Chemical Engineering)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Johnson Li</strong> (Computer Engineering)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Jacob Nguyen</strong> (Computer Engineering)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="medium-score">Score: 120/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Bryant Cao</strong> (Industrial & Systems Engineering)
+                        - <span class="medium-score">Score: 115/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Ryan Xi</strong></td>
+                    <td>ry.xi@ufl.edu</td>
+                    <td>Computer Science</td>
+                    <td>1/2 (Pryanna Pradhan)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Kenzo Fukuda</strong> (Computer Science)
+                        - <span class="high-score">Score: 160/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Kayla Inoa</strong> (Computer Science)
+                        - <span class="high-score">Score: 160/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 150/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 140/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        5. <strong>Adora Lin</strong> (Computer Science)
+                        - <span class="high-score">Score: 135/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                <tr>
+                    <td><strong>Johnson Li</strong></td>
+                    <td>zli6@ufl.edu</td>
+                    <td>Computer Science</td>
+                    <td>0/2 (None)</td>
+                    <td><div class="candidate-list">
+                    <div class="candidate-item">
+                        1. <strong>Adrian Moreno</strong> (Computer Science)
+                        - <span class="high-score">Score: 155/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        2. <strong>Thuy Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 145/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        3. <strong>Anthony Le</strong> (Computer Science)
+                        - <span class="high-score">Score: 130/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                
+                    <div class="candidate-item">
+                        4. <strong>Ricky Zhang</strong> (Computer Science)
+                        - <span class="medium-score">Score: 125/195</span>
+                        <span class="at-capacity-badge">At Capacity</span>
+                    </div>
+                </div></td>
+                </tr>
+            
+                </tbody>
+            </table>
+        </div>
+    </body>
+    </html>
+    
