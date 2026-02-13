@@ -2,6 +2,7 @@ import webbrowser
 import pandas as pd
 import csv
 import os
+import heapq
 from user import User
 from mentor import Mentor
 from mentee import Mentee
@@ -483,30 +484,29 @@ def calcScore_Mentor(mentor, mentees):
 #Calculates compatibility between a mentee and all the mentors
 def calcScore_Mentee(mentee, mentors):
     mentorScores = {}
-
     for mentor in mentors:
-
-        if mentee.getPreferences == True and mentee.getMajor != mentor.getMajor:
-            continue
+        score = 0
         
-        if mentee.getYear >= mentor.getYear:
-            continue
-        
+        # Avoid self-pairing
         if mentee.getName == mentor.getName:
             continue
 
-        # Filter: If mentor wants same major, skip mentees with different majors
-        if mentor.getPreferences == True and mentee.getMajor != mentor.getMajor:
-            continue
-
-        score = 0
+        # CHANGE: Instead of skipping, give a large penalty for year mismatch
+        if mentee.getYear >= mentor.getYear:
+            score -= 100 
+        
+        # CHANGE: Instead of skipping, give a penalty for major mismatch if preferred
+        if mentee.getPreferences == True and mentee.getMajor != mentor.getMajor:
+            score -= 50
+            
+        # Add the rest of your scoring logic
         score += assignScoreMajor(mentee, mentor)
         score += assignScoreProfHelpPerfRelationship(mentee, mentor)
         score += assignScoreMBTI(mentee, mentor)
         score += assignScoreInvolvement(mentee, mentor)
-        mentor.setScore(score)
-
-        mentorScores[mentor.getName] = mentor.getScores
+        
+        # Ensure score doesn't go below a baseline so they stay in the list
+        mentorScores[mentor.getName] = max(1, score) 
 
     return mentorScores
 
@@ -521,132 +521,150 @@ def initializeFinalMap():
     return completePairs
 
 
-def pairing(completePairings):
 
-    finalPairings = {}
-    paired_mentees = {}  # Tracks which mentors are assigned to a mentee
+
+def gale_shapley_round(mentees_to_match, mentors, existing_pairings, round_number):
+    print(f"\n--- Starting Gale-Shapley Round {round_number} ---")
     
-    # Initialize final pairings for each mentor
+    # 1. Setup Data Structures
+    mentor_capacity = {}
+    mentor_current_matches = {} # {MentorName: [(Score, MenteeName), ...]}
+    
     for mentor in mentors:
-        finalPairings[mentor.getName] = []
-    
-    # Initialize mentee tracking
-    for mentee in mentees:
-        paired_mentees[mentee.getName] = []
-    
-    # ---------------------------------------------------------
-    # STEP 1 & 2: HANDLE REQUESTS (Priority)
-    # ---------------------------------------------------------
-    
-    # Handle mentee requests
-    for mentee in mentees:
-        if len(paired_mentees[mentee.getName]) >= 2:
+        # Check how many mentees they ALREADY have from previous rounds
+        current_count = len(existing_pairings.get(mentor.getName, []))
+        total_limit = mentor.getNumMentees
+        
+        # Calculate remaining capacity for THIS round [cite: 61, 62]
+        if total_limit == 0:
+            remaining = 999 - current_count
+        else:
+            remaining = total_limit - current_count
+            
+        mentor_capacity[mentor.getName] = max(0, remaining)
+        mentor_current_matches[mentor.getName] = []
+
+    # 2. Build Preference Lists and CACHE scores [cite: 63, 68]
+    free_mentees = [] 
+    mentee_prefs = {} 
+    all_mentee_scores = {} 
+
+    for mentee in mentees_to_match:
+        free_mentees.append(mentee.getName)
+        
+        # Get scores for this mentee against ALL mentors
+        scores = calcScore_Mentee(mentee, mentors)
+        all_mentee_scores[mentee.getName] = scores 
+        
+        # Find mentors they are already paired with to avoid duplicates [cite: 64, 75]
+        already_paired_with = []
+        for m_name, paired_list in existing_pairings.items():
+            if mentee.getName in paired_list:
+                already_paired_with.append(m_name)
+        
+        # Sort mentors by score (Highest first), excluding current matches [cite: 65]
+        sorted_mentors = sorted(
+            [m for m in scores.items() if m[0] not in already_paired_with], 
+            key=lambda x: x[1], 
+            reverse=True
+        )
+        
+        mentee_prefs[mentee.getName] = [m[0] for m in sorted_mentors]
+
+    mentee_proposal_index = {m_name: 0 for m_name in free_mentees}
+
+    # 3. The Algorithm Loop [cite: 66]
+    while free_mentees:
+        mentee_name = free_mentees.pop(0)
+        prefs = mentee_prefs[mentee_name]
+        idx = mentee_proposal_index[mentee_name]
+        
+        if idx >= len(prefs):
             continue
             
-        mentee_answers = mentee.getAnswers
-        requested_mentors = mentee_answers.get("UserRequest", "No User Input")
+        target_mentor_name = prefs[idx]
+        mentee_proposal_index[mentee_name] += 1 
         
-        if requested_mentors != "No User Input":
-            requested_names = [name.strip() for name in requested_mentors.split(",")]
-            
-            for requested_name in requested_names:
-                if len(paired_mentees[mentee.getName]) >= 2:
-                    break
-                    
-                mentor = next((m for m in mentors if m.getName == requested_name), None)
-                
-                if mentor:
-                    mentor_capacity = mentor.getNumMentees
-                    current_mentees = len(finalPairings[mentor.getName])
-                    
-                    if mentor_capacity == 0 or current_mentees < mentor_capacity:
-                        if mentee.getName in completePairings.get(mentor.getName, {}):
-                            finalPairings[mentor.getName].append(mentee.getName)
-                            paired_mentees[mentee.getName].append(mentor.getName)
-                            
-    # Handle mentor requests
-    for mentor in mentors:
-        mentor_answers = mentor.getAnswers
-        requested_mentees = mentor_answers.get("UserRequest", "No User Input")
+        # Retrieve the specific score from our cached dictionary [cite: 69]
+        score = all_mentee_scores[mentee_name].get(target_mentor_name, 0)
         
-        if requested_mentees != "No User Input":
-            requested_names = [name.strip() for name in requested_mentees.split(",")]
+        matches = mentor_current_matches[target_mentor_name]
+        cap = mentor_capacity[target_mentor_name]
+        
+        # FIX: Handle mentors who are already full from Round 1
+        if cap == 0:
+            free_mentees.append(mentee_name)
+            continue
+
+        if len(matches) < cap:
+            # Mentor has space in THIS round 
+            heapq.heappush(matches, (score, mentee_name))
+        else:
+            # Mentor is full for this round - compare with lowest current match [cite: 71]
+            # Safety check: ensure matches is not empty before accessing index 0
+            if matches:
+                lowest_score, lowest_mentee = matches[0]
+                
+                if score > lowest_score:
+                    # Swap for the better match [cite: 72, 73]
+                    heapq.heappop(matches) 
+                    heapq.heappush(matches, (score, mentee_name))
+                    free_mentees.append(lowest_mentee) 
+                else:
+                    # New mentee is worse; keep current matches [cite: 74]
+                    free_mentees.append(mentee_name)
+            else:
+                # Fallback if capacity exists but matches list is empty
+                free_mentees.append(mentee_name)
+
+    # 4. Update the Master Pairings List [cite: 75]
+    new_pairings_count = 0
+    for mentor_name, match_list in mentor_current_matches.items():
+        if mentor_name not in existing_pairings:
+            existing_pairings[mentor_name] = []
+        
+        for score, mentee_name in match_list:
+            existing_pairings[mentor_name].append(mentee_name)
+            new_pairings_count += 1
             
-            for requested_name in requested_names:
-                if len(paired_mentees.get(requested_name, [])) >= 2:
-                    continue
-                
-                mentee = next((m for m in mentees if m.getName == requested_name), None)
-                
-                if mentee:
-                    mentor_capacity = mentor.getNumMentees
-                    current_mentees = len(finalPairings[mentor.getName])
-                    
-                    if mentor_capacity == 0 or current_mentees < mentor_capacity:
-                        if mentee.getName in completePairings.get(mentor.getName, {}):
-                            finalPairings[mentor.getName].append(mentee.getName)
-                            paired_mentees[mentee.getName].append(mentor.getName)
+    print(f"Round {round_number} Complete. {new_pairings_count} matches formed.")
+    return existing_pairings
 
-    # ---------------------------------------------------------
-    # SORTING MENTORS
-    # ---------------------------------------------------------
-    # Sort mentors: prioritize those with specific low limits, then by availability
-    mentors_sorted = sorted(mentors, 
-                            key=lambda m: (m.getNumMentees if m.getNumMentees > 0 else float('inf'), 
-                                           -len(finalPairings[m.getName])),
-                            reverse=False)
-
-    # ---------------------------------------------------------
-    # PASS 1: GUARANTEE ONE MENTOR (The "Fairness" Pass)
-    # Only pair if the mentee has 0 mentors currently.
-    # ---------------------------------------------------------
-    print("\n--- Starting Pass 1: Ensuring every mentee gets at least one mentor ---")
+def pairing(completePairings):
+    # This function now orchestrates the Two-Round Gale-Shapley
     
-    for mentor in mentors_sorted:
-        mentor_capacity = mentor.getNumMentees
+    finalPairings = {} # {MentorName: [MenteeName1, MenteeName2]}
+    
+    # ----------------------------------------
+    # ROUND 1: EVERYONE GETS THEIR FIRST MATCH
+    # ----------------------------------------
+    # In this round, we want every mentee to secure 1 spot.
+    
+    finalPairings = gale_shapley_round(mentees, mentors, finalPairings, 1)
+    
+    # ----------------------------------------
+    # ROUND 2: FILLING SECOND SPOTS
+    # ----------------------------------------
+    # Only mentees who want a second mentor enter this round.
+    # (And mentors only participate if they have capacity left)
+    
+    # Optional: Filter mentees who specifically asked for 2? 
+    # For now, we assume everyone is eligible for a second if they want it.
+    
+    finalPairings = gale_shapley_round(mentees, mentors, finalPairings, 2)
+    
+    # ----------------------------------------
+    # GENERATE STATS
+    # ----------------------------------------
+    paired_mentees = {}
+    for mentee in mentees:
+        paired_mentees[mentee.getName] = []
         
-        # Get compatible mentees sorted by score
-        mentor_scores = completePairings.get(mentor.getName, {})
-        sorted_mentees = sorted(mentor_scores.items(), key=lambda x: x[1], reverse=True)
-        
-        for mentee_name, score in sorted_mentees:
-            # Check Mentor Capacity
-            if mentor_capacity > 0 and len(finalPairings[mentor.getName]) >= mentor_capacity:
-                break
-                
-            # CRITICAL CHANGE: Only pick mentees who have 0 mentors
-            if len(paired_mentees.get(mentee_name, [])) == 0:
-                finalPairings[mentor.getName].append(mentee_name)
-                paired_mentees[mentee_name].append(mentor.getName)
-                # print(f"Pass 1: {mentee_name} -> {mentor.getName}")
-
-    # ---------------------------------------------------------
-    # PASS 2: FILL REMAINING SPOTS
-    # Pair if mentee has < 2 mentors.
-    # ---------------------------------------------------------
-    print("\n--- Starting Pass 2: Filling remaining spots (Max 2 mentors) ---")
-
-    for mentor in mentors_sorted:
-        mentor_capacity = mentor.getNumMentees
-        
-        # Get compatible mentees sorted by score
-        mentor_scores = completePairings.get(mentor.getName, {})
-        sorted_mentees = sorted(mentor_scores.items(), key=lambda x: x[1], reverse=True)
-        
-        for mentee_name, score in sorted_mentees:
-            # Check Mentor Capacity
-            if mentor_capacity > 0 and len(finalPairings[mentor.getName]) >= mentor_capacity:
-                break
-            
-            # Check Mentee Capacity (Standard limit of 2)
-            if len(paired_mentees.get(mentee_name, [])) < 2:
-                # Avoid duplicates (if assigned in Pass 1 or Requests)
-                if mentor.getName not in paired_mentees[mentee_name]:
-                    finalPairings[mentor.getName].append(mentee_name)
-                    paired_mentees[mentee_name].append(mentor.getName)
-                    print(f"✓ Paired: {mentee_name} → {mentor.getName} (Score: {score})")
-
-    # Find stats
+    for mentor_name, mentee_list in finalPairings.items():
+        for m_name in mentee_list:
+            if m_name in paired_mentees:
+                paired_mentees[m_name].append(mentor_name)
+    
     unpaired_mentees = [m.getName for m in mentees if len(paired_mentees.get(m.getName, [])) == 0]
     partially_paired = [m.getName for m in mentees if len(paired_mentees.get(m.getName, [])) == 1]
     
