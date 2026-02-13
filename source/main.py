@@ -1,5 +1,6 @@
 import webbrowser
 import pandas as pd
+import csv
 import os
 from user import User
 from mentor import Mentor
@@ -7,7 +8,8 @@ from mentee import Mentee
 from collections import defaultdict
 from typing import DefaultDict
 from typing import List
- 
+
+
 #Get the directory containing this script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -522,17 +524,21 @@ def initializeFinalMap():
 def pairing(completePairings):
 
     finalPairings = {}
-    paired_mentees = {}  # Changed to dict to track mentor count per mentee
+    paired_mentees = {}  # Tracks which mentors are assigned to a mentee
     
     # Initialize final pairings for each mentor
     for mentor in mentors:
         finalPairings[mentor.getName] = []
     
-    # Initialize mentee tracking (each can have up to 2 mentors)
+    # Initialize mentee tracking
     for mentee in mentees:
         paired_mentees[mentee.getName] = []
     
-    # Handle mentee requests (mentees requesting specific mentors)
+    # ---------------------------------------------------------
+    # STEP 1 & 2: HANDLE REQUESTS (Priority)
+    # ---------------------------------------------------------
+    
+    # Handle mentee requests
     for mentee in mentees:
         if len(paired_mentees[mentee.getName]) >= 2:
             continue
@@ -541,97 +547,223 @@ def pairing(completePairings):
         requested_mentors = mentee_answers.get("UserRequest", "No User Input")
         
         if requested_mentors != "No User Input":
-            # Parse comma-separated mentor names
             requested_names = [name.strip() for name in requested_mentors.split(",")]
             
             for requested_name in requested_names:
                 if len(paired_mentees[mentee.getName]) >= 2:
                     break
                     
-                # Find the mentor object
                 mentor = next((m for m in mentors if m.getName == requested_name), None)
                 
                 if mentor:
                     mentor_capacity = mentor.getNumMentees
                     current_mentees = len(finalPairings[mentor.getName])
                     
-                    # Check if mentor has capacity
                     if mentor_capacity == 0 or current_mentees < mentor_capacity:
-                        # Check if this mentee is in mentor's compatible list
                         if mentee.getName in completePairings.get(mentor.getName, {}):
                             finalPairings[mentor.getName].append(mentee.getName)
                             paired_mentees[mentee.getName].append(mentor.getName)
-                       
-    # Handle mentor requests (mentors requesting specific mentees)
+                            
+    # Handle mentor requests
     for mentor in mentors:
         mentor_answers = mentor.getAnswers
         requested_mentees = mentor_answers.get("UserRequest", "No User Input")
         
         if requested_mentees != "No User Input":
-            # Parse comma-separated mentee names
             requested_names = [name.strip() for name in requested_mentees.split(",")]
             
             for requested_name in requested_names:
                 if len(paired_mentees.get(requested_name, [])) >= 2:
                     continue
                 
-                # Find the mentee object
                 mentee = next((m for m in mentees if m.getName == requested_name), None)
                 
                 if mentee:
                     mentor_capacity = mentor.getNumMentees
                     current_mentees = len(finalPairings[mentor.getName])
                     
-                    # Check if mentor has capacity
                     if mentor_capacity == 0 or current_mentees < mentor_capacity:
-                        # Check if this mentee is in mentor's compatible list
                         if mentee.getName in completePairings.get(mentor.getName, {}):
                             finalPairings[mentor.getName].append(mentee.getName)
                             paired_mentees[mentee.getName].append(mentor.getName)
-               
-    # Sort mentors by how many spots they still have available (fill mentors who want more first)
+
+    # ---------------------------------------------------------
+    # SORTING MENTORS
+    # ---------------------------------------------------------
+    # Sort mentors: prioritize those with specific low limits, then by availability
     mentors_sorted = sorted(mentors, 
-                           key=lambda m: (m.getNumMentees if m.getNumMentees > 0 else float('inf'), 
-                                         -len(finalPairings[m.getName])),
-                           reverse=False)
+                            key=lambda m: (m.getNumMentees if m.getNumMentees > 0 else float('inf'), 
+                                           -len(finalPairings[m.getName])),
+                            reverse=False)
+
+    # ---------------------------------------------------------
+    # PASS 1: GUARANTEE ONE MENTOR (The "Fairness" Pass)
+    # Only pair if the mentee has 0 mentors currently.
+    # ---------------------------------------------------------
+    print("\n--- Starting Pass 1: Ensuring every mentee gets at least one mentor ---")
     
     for mentor in mentors_sorted:
         mentor_capacity = mentor.getNumMentees
-        current_mentees = len(finalPairings[mentor.getName])
         
-        # If mentor specified capacity and is at capacity, skip
-        if mentor_capacity > 0 and current_mentees >= mentor_capacity:
-            continue
-        
-        # Get this mentor's compatible mentees (sorted by score)
+        # Get compatible mentees sorted by score
         mentor_scores = completePairings.get(mentor.getName, {})
         sorted_mentees = sorted(mentor_scores.items(), key=lambda x: x[1], reverse=True)
         
-        # Pair mentees until mentor reaches capacity
         for mentee_name, score in sorted_mentees:
-            # Skip if mentee already has 2 mentors
-            if len(paired_mentees.get(mentee_name, [])) >= 2:
-                continue
-            
-            # Check capacity again
+            # Check Mentor Capacity
+            if mentor_capacity > 0 and len(finalPairings[mentor.getName]) >= mentor_capacity:
+                break
+                
+            # CRITICAL CHANGE: Only pick mentees who have 0 mentors
+            if len(paired_mentees.get(mentee_name, [])) == 0:
+                finalPairings[mentor.getName].append(mentee_name)
+                paired_mentees[mentee_name].append(mentor.getName)
+                # print(f"Pass 1: {mentee_name} -> {mentor.getName}")
+
+    # ---------------------------------------------------------
+    # PASS 2: FILL REMAINING SPOTS
+    # Pair if mentee has < 2 mentors.
+    # ---------------------------------------------------------
+    print("\n--- Starting Pass 2: Filling remaining spots (Max 2 mentors) ---")
+
+    for mentor in mentors_sorted:
+        mentor_capacity = mentor.getNumMentees
+        
+        # Get compatible mentees sorted by score
+        mentor_scores = completePairings.get(mentor.getName, {})
+        sorted_mentees = sorted(mentor_scores.items(), key=lambda x: x[1], reverse=True)
+        
+        for mentee_name, score in sorted_mentees:
+            # Check Mentor Capacity
             if mentor_capacity > 0 and len(finalPairings[mentor.getName]) >= mentor_capacity:
                 break
             
-            # Pair them
-            finalPairings[mentor.getName].append(mentee_name)
-            paired_mentees[mentee_name].append(mentor.getName)
-            print(f"✓ Paired: {mentee_name} → {mentor.getName} (Score: {score})")
-            
-            # If mentor reached capacity, move to next mentor
-            if mentor_capacity > 0 and len(finalPairings[mentor.getName]) >= mentor_capacity:
-                break
-    
-    # Find unpaired and partially paired mentees
+            # Check Mentee Capacity (Standard limit of 2)
+            if len(paired_mentees.get(mentee_name, [])) < 2:
+                # Avoid duplicates (if assigned in Pass 1 or Requests)
+                if mentor.getName not in paired_mentees[mentee_name]:
+                    finalPairings[mentor.getName].append(mentee_name)
+                    paired_mentees[mentee_name].append(mentor.getName)
+                    print(f"✓ Paired: {mentee_name} → {mentor.getName} (Score: {score})")
+
+    # Find stats
     unpaired_mentees = [m.getName for m in mentees if len(paired_mentees.get(m.getName, [])) == 0]
     partially_paired = [m.getName for m in mentees if len(paired_mentees.get(m.getName, [])) == 1]
     
-    
     return finalPairings, unpaired_mentees, partially_paired, paired_mentees
+
+def export_rankings_to_csv(mentors, completePairings, filename='mentor_rankings.csv'):
+    # Get the directory to save the file
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(script_dir, 'files', filename)
+    
+    # Prepare the data rows
+    rows = []
+    max_mentees_count = 0
+
+    for mentor in mentors:
+        mentor_name = mentor.getName
+        
+        # Get all compatible mentees and scores
+        # completePairings structure: { MentorName: { MenteeName: Score, ... } }
+        mentee_dict = completePairings.get(mentor_name, {})
+        
+        # Sort by score descending (Highest to Lowest)
+        sorted_mentees = sorted(mentee_dict.items(), key=lambda item: item[1], reverse=True)
+        
+        # Track max length for header generation later
+        if len(sorted_mentees) > max_mentees_count:
+            max_mentees_count = len(sorted_mentees)
+            
+        # Build the row: [Mentor Name, Mentee1, Score1, Mentee2, Score2, ...]
+        row = [mentor_name]
+        for mentee_name, score in sorted_mentees:
+            row.append(mentee_name)
+            row.append(score)
+            
+        rows.append(row)
+
+    # Create the dynamic header
+    # Header: Mentor Name, Rank 1 Mentee, Rank 1 Score, Rank 2 Mentee, Rank 2 Score...
+    header = ['Mentor Name']
+    for i in range(1, max_mentees_count + 1):
+        header.append(f'Rank {i} Mentee')
+        header.append(f'Rank {i} Score')
+
+    # Write to CSV
+    try:
+        with open(output_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(header) # Write header
+            writer.writerows(rows)  # Write all data rows
+            
+        print(f"✓ Rankings exported successfully to: {output_path}")
+        # Open the file automatically for you
+        os.startfile(output_path) 
+    except Exception as e:
+        print(f"Error exporting CSV: {e}")
+
+
+
+
+def export_mentee_rankings_to_csv(mentees, mentors, filename='mentee_rankings.csv'):
+    # Get the directory to save the file
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(script_dir, 'files', filename)
+    
+    rows = []
+    max_matches_count = 0
+
+    print(f"Generating Mentee Rankings CSV...")
+
+    for mentee in mentees:
+        # Calculate compatibility with ALL mentors for this mentee
+        # This uses your existing function
+        mentor_scores = calcScore_Mentee(mentee, mentors)
+        
+        # Sort by score descending (Highest to Lowest)
+        # mentor_scores is a dict { 'MentorName': Score }
+        sorted_mentors = sorted(mentor_scores.items(), key=lambda item: item[1], reverse=True)
+        
+        # Track max length for header generation
+        if len(sorted_mentors) > max_matches_count:
+            max_matches_count = len(sorted_mentors)
+            
+        # Build the row: [Mentee Name, Mentor1, Score1, Mentor2, Score2, ...]
+        row = [mentee.getName]
+        for mentor_name, score in sorted_mentors:
+            row.append(mentor_name)
+            row.append(score)
+            
+        rows.append(row)
+
+    # Create the dynamic header
+    # Header: Mentee Name, Rank 1 Mentor, Rank 1 Score, ...
+    header = ['Mentee Name']
+    for i in range(1, max_matches_count + 1):
+        header.append(f'Rank {i} Mentor')
+        header.append(f'Rank {i} Score')
+
+    # Write to CSV
+    try:
+        with open(output_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
+            writer.writerows(rows)
+            
+        print(f"✓ Mentee Rankings exported to: {output_path}")
+        # Try to open the file automatically (Windows)
+        try:
+            os.startfile(output_path)
+        except:
+            pass # Ignore if on Mac/Linux
+            
+    except Exception as e:
+        print(f"Error exporting CSV: {e}")
+
+
+
+
 
 def export_to_html(finalPairings, mentors, mentees, paired_mentees, filename='mentorship_report.html'):
     """
@@ -1069,14 +1201,27 @@ def export_to_html(finalPairings, mentors, mentees, paired_mentees, filename='me
     print(f"\n✓ HTML report exported to: {output_path}")
     print(f"  Open in browser: file://{output_path}")
     return output_path
-# Initialize and create pairings
+# ==========================================
+# 4. MAIN EXECUTION BLOCK
+# ==========================================
+
+# 1. Initialize Users (Only call this ONCE)
 initializeUsers()
+
+# 2. Calculate All Scores
 completePairings = initializeFinalMap()
+
+# 3. Export the Reports
+# Mentor Ranking CSV
+export_rankings_to_csv(mentors, completePairings)
+# Mentee Ranking CSV
+export_mentee_rankings_to_csv(mentees, mentors)
+
+# 4. Run the matching logic (The "Fairness" Algorithm)
 finalPairings, unpaired, partially_paired, paired_mentees = pairing(completePairings)
 
-# Export to HTML
-export_to_html(finalPairings, mentors, mentees, paired_mentees)
+# 5. Export to HTML
+html_path = export_to_html(finalPairings, mentors, mentees, paired_mentees)
 
-html_path = export_to_html(finalPairings, mentors,mentees, paired_mentees)
-
+# 6. Open the HTML report
 webbrowser.open('file://' + html_path)
