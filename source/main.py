@@ -780,6 +780,55 @@ def export_mentee_rankings_to_csv(mentees, mentors, filename='mentee_rankings.cs
         print(f"Error exporting CSV: {e}")
 
 
+def export_compatibility_matrix(mentors, mentees, filename='compatibility_matrix.csv'):
+    # Get the directory to save the file
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(script_dir, 'files', filename)
+    
+    print(f"Generating Compatibility Matrix CSV...")
+    
+    # 1. Prepare data for a DataFrame
+    # We will create a list of rows where each row is a mentor
+    matrix_data = []
+    
+    for mentor in mentors:
+        # Create a dictionary for this mentor
+        # The key will be the column name (Mentee Name) and the value will be the score
+        row = {'Mentor Name': mentor.getName}
+        
+        for mentee in mentees:
+            # We use your existing score calculation functions
+            # Note: This ignores the filters (Year/Major) to show the "raw" score 
+            # If you want to see 0s for filtered out pairs, you can wrap this in a try/except
+            score = (assignScoreMajor(mentee, mentor) + 
+                     assignScoreProfHelpPerfRelationship(mentee, mentor) +
+                     assignScoreMBTI(mentee, mentor) + 
+                     assignScoreInvolvement(mentee, mentor))
+            
+            row[mentee.getName] = score
+            
+        matrix_data.append(row)
+
+    # 2. Convert to DataFrame and Export
+    try:
+        matrix_df = pd.DataFrame(matrix_data)
+        
+        # Set Mentor Name as the index so it becomes the first column
+        matrix_df.set_index('Mentor Name', inplace=True)
+        
+        # Write to CSV
+        matrix_df.to_csv(output_path)
+        
+        print(f"✓ Compatibility Matrix exported to: {output_path}")
+        
+        # Try to open the file automatically (Windows)
+        try:
+            os.startfile(output_path)
+        except:
+            pass
+            
+    except Exception as e:
+        print(f"Error exporting Matrix CSV: {e}")
 
 
 
@@ -1234,6 +1283,9 @@ completePairings = initializeFinalMap()
 export_rankings_to_csv(mentors, completePairings)
 # Mentee Ranking CSV
 export_mentee_rankings_to_csv(mentees, mentors)
+# mentor mentee score matrix
+export_compatibility_matrix(mentors, mentees)
+
 
 # 4. Run the matching logic (The "Fairness" Algorithm)
 finalPairings, unpaired, partially_paired, paired_mentees = pairing(completePairings)
