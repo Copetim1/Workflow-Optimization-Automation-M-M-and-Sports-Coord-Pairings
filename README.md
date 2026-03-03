@@ -77,10 +77,18 @@ pip install pandas openpyxl --break-system-packages
 
 ### Basic Usage
 
-Run the main script:
+To run the project smoothly, we have provided setup scripts that automatically check for Python, set up a virtual environment, install the necessary dependencies, and execute the main algorithm.
 
+**For Windows (PowerShell):**
+```powershell
+.\WINDOWS_run_project.ps1
+```
+*(Note: If you get an execution policy error, you may need to run run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` first.)*
+
+**For macOS/Linux (Terminal):**
 ```bash
-python main.py
+chmod +x MAC_run_project.sh
+./MAC_run_project.sh
 ```
 
 This will:
