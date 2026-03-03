@@ -88,6 +88,8 @@ To run the project smoothly, we have provided setup scripts that automatically c
 **For macOS/Linux (Terminal):**
 ```bash
 chmod +x MAC_run_project.sh
+````
+````bash
 ./MAC_run_project.sh
 ```
 
